@@ -1,5 +1,6 @@
 package dev.spa.mclevel;
 
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,10 +22,12 @@ import org.bukkit.event.player.PlayerQuitEvent;
 public final class LevelListener implements Listener {
     private final LevelService levelService;
     private final ActivityTracker tracker;
+    private final LevelCelebration celebration;
 
-    public LevelListener(LevelService levelService, ActivityTracker tracker) {
+    public LevelListener(LevelService levelService, ActivityTracker tracker, LevelCelebration celebration) {
         this.levelService = levelService;
         this.tracker = tracker;
+        this.celebration = celebration;
     }
 
     // --- ライフサイクル ---
@@ -82,6 +85,16 @@ public final class LevelListener implements Listener {
     public void onAttack(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player player) {
             tracker.markActive(player);
+        }
+    }
+
+    // --- お祝い演出の安全対策 ---
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onCelebrationFireworkDamage(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Firework firework
+                && firework.getPersistentDataContainer().has(celebration.getCelebrationFireworkKey())) {
+            event.setCancelled(true);
         }
     }
 

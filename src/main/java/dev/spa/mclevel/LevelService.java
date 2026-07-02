@@ -1,7 +1,5 @@
 package dev.spa.mclevel;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.entity.Player;
@@ -17,10 +15,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class LevelService {
     private final LevelDataStore dataStore;
+    private final LevelCelebration celebration;
     private final Map<UUID, PlayerState> states = new ConcurrentHashMap<>();
 
-    public LevelService(LevelDataStore dataStore) {
+    public LevelService(LevelDataStore dataStore, LevelCelebration celebration) {
         this.dataStore = dataStore;
+        this.celebration = celebration;
     }
 
     /** 参加時にメモリへ状態を読み込む。 */
@@ -78,14 +78,15 @@ public final class LevelService {
         LevelTier qualified = LevelTier.highestQualified(state.activeSeconds, countAchievements(player));
         if (qualified.getValue() > state.level) {
             state.level = qualified.getValue();
-            notifyLevelUp(player, qualified);
+            celebration.celebrate(player, qualified);
         }
     }
 
-    private void notifyLevelUp(Player player, LevelTier tier) {
-        player.sendMessage(Component.text("★ レベルが " + tier.getValue() + " になりました！", NamedTextColor.GOLD));
-        player.sendMessage(Component.text("解放: ", NamedTextColor.YELLOW)
-                .append(Component.text(tier.getUnlockDescription(), NamedTextColor.WHITE)));
+    /** 管理者がレベルを強制設定し、即座に保存する。お祝い演出も発火する。 */
+    public void setLevel(Player player, int level) {
+        state(player).level = level;
+        save(player);
+        celebration.celebrate(player, LevelTier.fromValue(level));
     }
 
     /** オンラインプレイヤー全員のメモリ状態を config に反映して保存する。 */

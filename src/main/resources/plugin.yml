@@ -7,3 +7,8 @@ commands:
   level:
     description: 現在のレベルと次レベルへの進捗を表示します
     usage: /level
+  mclevel:
+    description: McLevel アドミンコマンド
+    usage: /mclevel set <プレイヤー名> <0-3>
+    permission: mclevel.admin
+    permission-message: このコマンドを実行する権限がありません。

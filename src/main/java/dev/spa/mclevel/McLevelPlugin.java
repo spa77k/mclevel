@@ -13,10 +13,11 @@ public final class McLevelPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         LevelDataStore dataStore = new LevelDataStore(this);
-        levelService = new LevelService(dataStore);
+        LevelCelebration celebration = new LevelCelebration(this);
+        levelService = new LevelService(dataStore, celebration);
         ActivityTracker tracker = new ActivityTracker(levelService);
 
-        getServer().getPluginManager().registerEvents(new LevelListener(levelService, tracker), this);
+        getServer().getPluginManager().registerEvents(new LevelListener(levelService, tracker, celebration), this);
 
         PluginCommand levelCommand = getCommand("level");
         if (levelCommand != null) {
@@ -25,6 +26,15 @@ public final class McLevelPlugin extends JavaPlugin {
             levelCommand.setTabCompleter(executor);
         } else {
             getLogger().warning("level コマンドの登録に失敗しました。plugin.yml を確認してください。");
+        }
+
+        PluginCommand adminCommand = getCommand("mclevel");
+        if (adminCommand != null) {
+            AdminCommand executor = new AdminCommand(levelService);
+            adminCommand.setExecutor(executor);
+            adminCommand.setTabCompleter(executor);
+        } else {
+            getLogger().warning("mclevel コマンドの登録に失敗しました。plugin.yml を確認してください。");
         }
 
         // 既にオンラインのプレイヤー（/reload 時など）を読み込む。
@@ -41,6 +51,7 @@ public final class McLevelPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        getServer().getScheduler().cancelTasks(this);
         if (levelService != null) {
             levelService.saveAll();
         }
