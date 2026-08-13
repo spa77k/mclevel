@@ -33,7 +33,7 @@ PaperMC サーバー向けのシンプルなレベル制度プラグインです
 | --- | ---: | ---: | --- |
 | Lv0 | 0時間 | 0個 | 資源サーバーで開始、基本案内のみ |
 | Lv1 | 2時間 | 3個 | 建築サーバー入場、土地保護の利用開始 |
-| Lv2 | 50時間 | 25個 | 裏世界への入場権 |
+| Lv2 | 50時間 | 25個 | ショップ上限15個 |
 | Lv3 | 100時間 | 40個 | 記念称号 |
 
 レベルアップには、必要時間と必要進捗数の両方を満たす必要があります。
@@ -98,7 +98,7 @@ target/mclevel-1.0.0.jar
 
 ```text
 mclevel_lv1: multiverse.access.build
-mclevel_lv2: mclevel_lv1 を継承
+mclevel_lv2: mclevel_lv1 を継承、spsmc.quickshop.level2
 mclevel_lv3: mclevel_lv2 を継承
 ```
 

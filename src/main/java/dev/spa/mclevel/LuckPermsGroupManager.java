@@ -25,6 +25,7 @@ import java.util.logging.Level;
  */
 public final class LuckPermsGroupManager {
     public static final String BUILD_PERMISSION = "multiverse.access.build";
+    public static final String LEVEL_2_SHOP_PERMISSION = "spsmc.quickshop.level2";
 
     private static final String LEVEL_1_GROUP = "mclevel_lv1";
     private static final String LEVEL_2_GROUP = "mclevel_lv2";
@@ -48,7 +49,8 @@ public final class LuckPermsGroupManager {
             if (failure != null) {
                 plugin.getLogger().log(Level.SEVERE, "LuckPermsのMcLevel用グループ初期化に失敗しました。", failure);
             } else {
-                plugin.getLogger().info("LuckPermsのMcLevel用グループを確認しました。建築ワールド権限: " + BUILD_PERMISSION);
+                plugin.getLogger().info("LuckPermsのMcLevel用グループを確認しました。建築ワールド権限: "
+                        + BUILD_PERMISSION + ", Lv2ショップ権限: " + LEVEL_2_SHOP_PERMISSION);
             }
         });
     }
@@ -119,9 +121,15 @@ public final class LuckPermsGroupManager {
                                 .build())))
                 .thenCompose(ignored -> ensureGroup(LEVEL_2_GROUP))
                 .thenCompose(group -> configureGroup(group,
-                        target -> target.data().add(InheritanceNode.builder()
-                                .group(LEVEL_1_GROUP)
-                                .build())))
+                        target -> {
+                            target.data().add(InheritanceNode.builder()
+                                    .group(LEVEL_1_GROUP)
+                                    .build());
+                            target.data().add(PermissionNode.builder()
+                                    .permission(LEVEL_2_SHOP_PERMISSION)
+                                    .value(true)
+                                    .build());
+                        }))
                 .thenCompose(ignored -> ensureGroup(LEVEL_3_GROUP))
                 .thenCompose(group -> configureGroup(group,
                         target -> target.data().add(InheritanceNode.builder()
