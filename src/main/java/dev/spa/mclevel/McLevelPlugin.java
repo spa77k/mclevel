@@ -14,7 +14,8 @@ public final class McLevelPlugin extends JavaPlugin {
     public void onEnable() {
         LevelDataStore dataStore = new LevelDataStore(this);
         LevelCelebration celebration = new LevelCelebration(this);
-        levelService = new LevelService(dataStore, celebration);
+        LuckPermsGroupManager groupManager = new LuckPermsGroupManager(this);
+        levelService = new LevelService(dataStore, celebration, groupManager);
         ActivityTracker tracker = new ActivityTracker(levelService);
 
         getServer().getPluginManager().registerEvents(new LevelListener(levelService, tracker, celebration), this);
@@ -41,6 +42,7 @@ public final class McLevelPlugin extends JavaPlugin {
         for (Player player : getServer().getOnlinePlayers()) {
             levelService.load(player);
             tracker.start(player);
+            levelService.syncPermissions(player);
         }
 
         // 1 秒ごとのアクティブ時間積算・昇格判定。

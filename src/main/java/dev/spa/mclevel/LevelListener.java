@@ -38,6 +38,7 @@ public final class LevelListener implements Listener {
         levelService.load(player);
         tracker.start(player);
         levelService.evaluate(player);
+        levelService.syncPermissions(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

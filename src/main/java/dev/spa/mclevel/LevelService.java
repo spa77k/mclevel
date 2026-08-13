@@ -16,11 +16,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class LevelService {
     private final LevelDataStore dataStore;
     private final LevelCelebration celebration;
+    private final LuckPermsGroupManager groupManager;
     private final Map<UUID, PlayerState> states = new ConcurrentHashMap<>();
 
-    public LevelService(LevelDataStore dataStore, LevelCelebration celebration) {
+    public LevelService(LevelDataStore dataStore, LevelCelebration celebration, LuckPermsGroupManager groupManager) {
         this.dataStore = dataStore;
         this.celebration = celebration;
+        this.groupManager = groupManager;
     }
 
     /** 参加時にメモリへ状態を読み込む。 */
@@ -45,6 +47,11 @@ public final class LevelService {
 
     public long getActiveSeconds(Player player) {
         return state(player).activeSeconds;
+    }
+
+    /** 現在レベルをLuckPermsのMcLevel用グループへ反映する。 */
+    public void syncPermissions(Player player) {
+        groupManager.syncPlayer(player, getLevel(player));
     }
 
     /** アクティブと判定された 1 秒を加算する。 */
@@ -78,6 +85,8 @@ public final class LevelService {
         LevelTier qualified = LevelTier.highestQualified(state.activeSeconds, countAchievements(player));
         if (qualified.getValue() > state.level) {
             state.level = qualified.getValue();
+            save(player);
+            groupManager.syncPlayer(player, state.level);
             celebration.celebrate(player, qualified);
         }
     }
@@ -86,6 +95,7 @@ public final class LevelService {
     public void setLevel(Player player, int level) {
         state(player).level = level;
         save(player);
+        groupManager.syncPlayer(player, level);
         celebration.celebrate(player, LevelTier.fromValue(level));
     }
 
