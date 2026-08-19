@@ -1,5 +1,6 @@
 package dev.spa.mclevel;
 
+import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,8 +13,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.player.PlayerToggleSprintEvent;
 
 /**
  * 自発的な操作イベントを {@link ActivityTracker} に伝え、
@@ -57,13 +59,17 @@ public final class LevelListener implements Listener {
     // --- 自発的操作（アクティブ判定） ---
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onMove(PlayerMoveEvent event) {
-        // 視点回転だけでは更新せず、ブロック座標が変わった場合のみアクティブとみなす。
-        if (event.getFrom().getBlockX() == event.getTo().getBlockX()
-                && event.getFrom().getBlockY() == event.getTo().getBlockY()
-                && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
-            return;
-        }
+    public void onJump(PlayerJumpEvent event) {
+        tracker.markActive(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onToggleSprint(PlayerToggleSprintEvent event) {
+        tracker.markActive(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onToggleSneak(PlayerToggleSneakEvent event) {
         tracker.markActive(event.getPlayer());
     }
 
