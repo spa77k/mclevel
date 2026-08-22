@@ -10,19 +10,16 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 「自発的に行動しているとき」だけプレイ時間をカウントするための仕組み。
  *
- * 各プレイヤーの最後の操作時刻を記録し、1 秒ごとのタスクで
- * 「最後の操作から AFK_THRESHOLD_MILLIS 以内」のプレイヤーにのみ 1 秒を加算する。
+ * 各プレイヤーのアクティブ期限を記録し、5 秒ごとのタスクで
+ * アクティブだった経過時間をまとめて加算する。
  * しきい値（1 分）は猶予期間として働き、1 分に 1 回以上操作していれば連続アクティブ扱いになる。
  */
 public final class ActivityTracker {
     /** 無操作がこの時間続いたら「停止中」とみなしカウントを止める（1 分）。 */
     private static final long AFK_THRESHOLD_MILLIS = 60_000L;
-    /** カウント中、評価（昇格判定）を行う間隔（秒）。負荷軽減のためまとめて評価する。 */
-    private static final int EVALUATE_INTERVAL_SECONDS = 5;
-
     private final LevelService levelService;
-    private final Map<UUID, Long> lastActivityMillis = new ConcurrentHashMap<>();
-    private int tickCounter = 0;
+    private final Map<UUID, Long> activeUntilMillis = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> countedUntilMillis = new ConcurrentHashMap<>();
 
     public ActivityTracker(LevelService levelService) {
         this.levelService = levelService;
@@ -30,33 +27,54 @@ public final class ActivityTracker {
 
     /** 自発的な操作があったことを記録する。 */
     public void markActive(Player player) {
-        lastActivityMillis.put(player.getUniqueId(), System.currentTimeMillis());
+        UUID uuid = player.getUniqueId();
+        long now = System.currentTimeMillis();
+        Long activeUntil = activeUntilMillis.get(uuid);
+
+        // AFK後の操作は新しい計測区間として扱い、AFK中の時間を加算しない。
+        if (activeUntil == null || activeUntil <= now) {
+            countedUntilMillis.put(uuid, now);
+        }
+        activeUntilMillis.put(uuid, now + AFK_THRESHOLD_MILLIS);
     }
 
     /** 参加時に基準時刻を初期化する。 */
     public void start(Player player) {
-        lastActivityMillis.put(player.getUniqueId(), System.currentTimeMillis() - AFK_THRESHOLD_MILLIS);
+        UUID uuid = player.getUniqueId();
+        long now = System.currentTimeMillis();
+        activeUntilMillis.put(uuid, now);
+        countedUntilMillis.put(uuid, now);
     }
 
     /** 退出時にトラッキングを終了する。 */
     public void stop(Player player) {
-        lastActivityMillis.remove(player.getUniqueId());
+        UUID uuid = player.getUniqueId();
+        activeUntilMillis.remove(uuid);
+        countedUntilMillis.remove(uuid);
     }
 
-    /** 1 秒ごとに呼ばれる本体。アクティブなプレイヤーに時間を加算し、定期的に昇格判定する。 */
+    /** 5 秒ごとに呼ばれる本体。アクティブ時間をまとめて加算し、昇格判定する。 */
     public void tick() {
         long now = System.currentTimeMillis();
-        boolean evaluate = (++tickCounter % EVALUATE_INTERVAL_SECONDS) == 0;
 
         for (Player player : Bukkit.getOnlinePlayers()) {
-            Long last = lastActivityMillis.get(player.getUniqueId());
-            if (last == null || now - last > AFK_THRESHOLD_MILLIS) {
+            UUID uuid = player.getUniqueId();
+            Long activeUntil = activeUntilMillis.get(uuid);
+            Long countedUntil = countedUntilMillis.get(uuid);
+            if (activeUntil == null || countedUntil == null) {
                 continue;
             }
-            levelService.addActiveSecond(player);
-            if (evaluate) {
-                levelService.evaluate(player);
+
+            long activeEnd = Math.min(now, activeUntil);
+            long elapsedMillis = activeEnd - countedUntil;
+            long activeSeconds = elapsedMillis / 1_000L;
+            if (activeSeconds <= 0) {
+                continue;
             }
+
+            countedUntilMillis.put(uuid, countedUntil + activeSeconds * 1_000L);
+            levelService.addActiveSeconds(player, activeSeconds);
+            levelService.evaluate(player);
         }
     }
 }

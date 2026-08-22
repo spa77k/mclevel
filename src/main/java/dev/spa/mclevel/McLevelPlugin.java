@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class McLevelPlugin extends JavaPlugin {
-    private static final long SECOND_TICKS = 20L;          // 1 秒
+    private static final long ACTIVITY_TICKS = 20L * 5L;  // 5 秒
     private static final long AUTOSAVE_TICKS = 20L * 300L; // 5 分
 
     private LevelService levelService;
@@ -45,8 +45,8 @@ public final class McLevelPlugin extends JavaPlugin {
             levelService.syncPermissions(player);
         }
 
-        // 1 秒ごとのアクティブ時間積算・昇格判定。
-        getServer().getScheduler().runTaskTimer(this, tracker::tick, SECOND_TICKS, SECOND_TICKS);
+        // 5 秒ごとのアクティブ時間積算・昇格判定。
+        getServer().getScheduler().runTaskTimer(this, tracker::tick, ACTIVITY_TICKS, ACTIVITY_TICKS);
         // 定期オートセーブ。
         getServer().getScheduler().runTaskTimer(this, levelService::saveAll, AUTOSAVE_TICKS, AUTOSAVE_TICKS);
     }

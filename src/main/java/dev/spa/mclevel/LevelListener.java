@@ -53,6 +53,7 @@ public final class LevelListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onAdvancement(PlayerAdvancementDoneEvent event) {
+        levelService.refreshAchievements(event.getPlayer());
         levelService.evaluate(event.getPlayer());
     }
 

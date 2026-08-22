@@ -25,10 +25,14 @@ public final class LevelService {
         this.groupManager = groupManager;
     }
 
-    /** 参加時にメモリへ状態を読み込む。 */
+    /** 参加時にメモリへ状態と進捗数を読み込む。 */
     public void load(Player player) {
         UUID uuid = player.getUniqueId();
-        states.put(uuid, new PlayerState(dataStore.getLevel(uuid), dataStore.getActiveSeconds(uuid)));
+        states.put(uuid, new PlayerState(
+                dataStore.getLevel(uuid),
+                dataStore.getActiveSeconds(uuid),
+                countAchievementsFromServer(player)
+        ));
     }
 
     /** 退出時にメモリから状態を取り除く（事前に save しておくこと）。 */
@@ -38,7 +42,11 @@ public final class LevelService {
 
     private PlayerState state(Player player) {
         return states.computeIfAbsent(player.getUniqueId(),
-                uuid -> new PlayerState(dataStore.getLevel(uuid), dataStore.getActiveSeconds(uuid)));
+                uuid -> new PlayerState(
+                        dataStore.getLevel(uuid),
+                        dataStore.getActiveSeconds(uuid),
+                        countAchievementsFromServer(player)
+                ));
     }
 
     public int getLevel(Player player) {
@@ -54,13 +62,25 @@ public final class LevelService {
         groupManager.syncPlayer(player, getLevel(player));
     }
 
-    /** アクティブと判定された 1 秒を加算する。 */
-    public void addActiveSecond(Player player) {
-        state(player).activeSeconds++;
+    /** アクティブと判定された経過秒数を加算する。 */
+    public void addActiveSeconds(Player player, long activeSeconds) {
+        if (activeSeconds > 0) {
+            state(player).activeSeconds += activeSeconds;
+        }
     }
 
-    /** バニラ進捗のうちレシピ解禁を除いた達成数を数える。 */
+    /** キャッシュ済みのバニラ進捗達成数を返す。 */
     public int countAchievements(Player player) {
+        return state(player).achievements;
+    }
+
+    /** 進捗達成イベント後に、キャッシュだけを更新する。 */
+    public void refreshAchievements(Player player) {
+        state(player).achievements = countAchievementsFromServer(player);
+    }
+
+    /** バニラ進捗のうちレシピ解禁を除いた達成数を数える。参加時と進捗イベント時だけ呼ぶ。 */
+    private int countAchievementsFromServer(Player player) {
         int count = 0;
         Iterator<Advancement> it = Bukkit.advancementIterator();
         while (it.hasNext()) {
@@ -102,7 +122,7 @@ public final class LevelService {
     /** オンラインプレイヤー全員のメモリ状態を config に反映して保存する。 */
     public void saveAll() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            save(player);
+            flush(player);
         }
         dataStore.save();
     }
@@ -122,10 +142,12 @@ public final class LevelService {
     private static final class PlayerState {
         private int level;
         private long activeSeconds;
+        private int achievements;
 
-        private PlayerState(int level, long activeSeconds) {
+        private PlayerState(int level, long activeSeconds, int achievements) {
             this.level = level;
             this.activeSeconds = activeSeconds;
+            this.achievements = achievements;
         }
     }
 }
