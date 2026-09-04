@@ -6,9 +6,9 @@ package dev.spa.mclevel;
  */
 public enum LevelTier {
     LV0(0, 0, 0, "資源サーバーで開始、基本案内のみ"),
-    LV1(1, 2 * 3600, 3, "建築サーバー入場、土地保護の利用開始"),
-    LV2(2, 50 * 3600, 25, "ショップ上限15個"),
-    LV3(3, 100 * 3600, 40, "記念称号");
+    LV1(1, 1 * 3600, 5, "建築サーバー入場、土地保護の利用開始"),
+    LV2(2, 25 * 3600, 25, "ショップ上限15個"),
+    LV3(3, 75 * 3600, 40, "記念称号");
 
     private final int value;
     private final long requiredPlaySeconds;
