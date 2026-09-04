@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * /level — 現在のレベルと次レベルへの進捗（プレイ時間・実績数）を表示する。
@@ -31,12 +32,14 @@ public final class LevelCommand implements CommandExecutor, TabCompleter {
         LevelTier current = LevelTier.fromValue(levelService.getLevel(player));
         long activeSeconds = levelService.getActiveSeconds(player);
         int achievements = levelService.countAchievements(player);
+        long selfIncomeCents = levelService.getSelfIncomeCents(player);
 
         player.sendMessage(Component.text("=== レベル制度 ===", NamedTextColor.GOLD));
         player.sendMessage(Component.text("現在レベル: Lv" + current.getValue(), NamedTextColor.AQUA)
                 .append(Component.text(" (" + current.getUnlockDescription() + ")", NamedTextColor.GRAY)));
         player.sendMessage(Component.text("アクティブプレイ時間: " + formatHours(activeSeconds), NamedTextColor.WHITE));
         player.sendMessage(Component.text("実績達成数: " + achievements + " 個", NamedTextColor.WHITE));
+        player.sendMessage(Component.text("累計自力収入: " + formatMoney(selfIncomeCents), NamedTextColor.WHITE));
 
         LevelTier next = current.next();
         if (next == null) {
@@ -49,6 +52,11 @@ public final class LevelCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(progressLine("  実績", achievements + " 個",
                     next.getRequiredAchievements() + " 個",
                     achievements >= next.getRequiredAchievements()));
+            if (next.getRequiredSelfIncomeCents() > 0) {
+                player.sendMessage(progressLine("  累計自力収入", formatMoney(selfIncomeCents),
+                        formatMoney(next.getRequiredSelfIncomeCents()),
+                        selfIncomeCents >= next.getRequiredSelfIncomeCents()));
+            }
         }
         return true;
     }
@@ -63,6 +71,13 @@ public final class LevelCommand implements CommandExecutor, TabCompleter {
         long hours = seconds / 3600;
         long minutes = (seconds % 3600) / 60;
         return hours + " 時間 " + minutes + " 分";
+    }
+
+    private String formatMoney(long cents) {
+        if (cents % 100 == 0) {
+            return String.format(Locale.ROOT, "%,d S", cents / 100);
+        }
+        return String.format(Locale.ROOT, "%,.2f S", cents / 100.0);
     }
 
     @Override

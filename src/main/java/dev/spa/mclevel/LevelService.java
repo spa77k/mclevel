@@ -2,8 +2,11 @@ package dev.spa.mclevel;
 
 import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -31,6 +34,7 @@ public final class LevelService {
         states.put(uuid, new PlayerState(
                 dataStore.getLevel(uuid),
                 dataStore.getActiveSeconds(uuid),
+                dataStore.getSelfIncomeCents(uuid),
                 countAchievementsFromServer(player)
         ));
     }
@@ -45,6 +49,7 @@ public final class LevelService {
                 uuid -> new PlayerState(
                         dataStore.getLevel(uuid),
                         dataStore.getActiveSeconds(uuid),
+                        dataStore.getSelfIncomeCents(uuid),
                         countAchievementsFromServer(player)
                 ));
     }
@@ -57,6 +62,10 @@ public final class LevelService {
         return state(player).activeSeconds;
     }
 
+    public long getSelfIncomeCents(Player player) {
+        return state(player).selfIncomeCents;
+    }
+
     /** 現在レベルをLuckPermsのMcLevel用グループへ反映する。 */
     public void syncPermissions(Player player) {
         groupManager.syncPlayer(player, getLevel(player));
@@ -67,6 +76,25 @@ public final class LevelService {
         if (activeSeconds > 0) {
             state(player).activeSeconds += activeSeconds;
         }
+    }
+
+    /** Jobsまたはデイリークエストによる正の収入だけを累計し、昇格判定を行う。 */
+    public void addSelfIncome(OfflinePlayer player, double amount) {
+        long amountCents = toCents(amount);
+        if (player == null || amountCents <= 0) {
+            return;
+        }
+
+        Player onlinePlayer = Bukkit.getPlayer(player.getUniqueId());
+        if (onlinePlayer != null) {
+            PlayerState state = state(onlinePlayer);
+            state.selfIncomeCents = safeAdd(state.selfIncomeCents, amountCents);
+            evaluate(onlinePlayer);
+            return;
+        }
+
+        dataStore.addSelfIncomeCents(player.getUniqueId(), player.getName(), amountCents);
+        dataStore.save();
     }
 
     /** キャッシュ済みのバニラ進捗達成数を返す。 */
@@ -102,7 +130,11 @@ public final class LevelService {
      */
     public void evaluate(Player player) {
         PlayerState state = state(player);
-        LevelTier qualified = LevelTier.highestQualified(state.activeSeconds, countAchievements(player));
+        LevelTier qualified = LevelTier.highestQualified(
+                state.activeSeconds,
+                countAchievements(player),
+                state.selfIncomeCents
+        );
         if (qualified.getValue() > state.level) {
             state.level = qualified.getValue();
             save(player);
@@ -130,7 +162,13 @@ public final class LevelService {
     /** 1 プレイヤーのメモリ状態を config に反映する（ファイル書き出しは呼び出し側）。 */
     public void flush(Player player) {
         PlayerState state = state(player);
-        dataStore.put(player.getUniqueId(), player.getName(), state.level, state.activeSeconds);
+        dataStore.put(
+                player.getUniqueId(),
+                player.getName(),
+                state.level,
+                state.activeSeconds,
+                state.selfIncomeCents
+        );
     }
 
     /** 1 プレイヤーを反映してファイルへ保存する。 */
@@ -142,12 +180,32 @@ public final class LevelService {
     private static final class PlayerState {
         private int level;
         private long activeSeconds;
+        private long selfIncomeCents;
         private int achievements;
 
-        private PlayerState(int level, long activeSeconds, int achievements) {
+        private PlayerState(int level, long activeSeconds, long selfIncomeCents, int achievements) {
             this.level = level;
             this.activeSeconds = activeSeconds;
+            this.selfIncomeCents = selfIncomeCents;
             this.achievements = achievements;
         }
+    }
+
+    private long toCents(double amount) {
+        if (!Double.isFinite(amount) || amount <= 0.0) {
+            return 0L;
+        }
+        try {
+            return BigDecimal.valueOf(amount)
+                    .movePointRight(2)
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .longValueExact();
+        } catch (ArithmeticException exception) {
+            return Long.MAX_VALUE;
+        }
+    }
+
+    private long safeAdd(long current, long amount) {
+        return Long.MAX_VALUE - current < amount ? Long.MAX_VALUE : current + amount;
     }
 }

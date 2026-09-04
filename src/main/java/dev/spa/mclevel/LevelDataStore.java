@@ -8,7 +8,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 /**
- * プレイヤーごとの level と activeSeconds（アクティブプレイ秒）を data.yml に永続化する。
+ * プレイヤーごとの level、activeSeconds（アクティブプレイ秒）、selfIncomeCents（累計自力収入）を
+ * data.yml に永続化する。
  * 実績数はバニラ進捗から都度導出するため保存しない。
  */
 public final class LevelDataStore {
@@ -37,11 +38,28 @@ public final class LevelDataStore {
         return Math.max(0L, activeSeconds);
     }
 
+    public long getSelfIncomeCents(UUID uuid) {
+        long selfIncomeCents = config.getLong(path(uuid, "selfIncomeCents"), 0L);
+        return Math.max(0L, selfIncomeCents);
+    }
+
     /** メモリ上の値を config に反映する（ファイル保存は行わない）。 */
-    public void put(UUID uuid, String playerName, int level, long activeSeconds) {
+    public void put(UUID uuid, String playerName, int level, long activeSeconds, long selfIncomeCents) {
         config.set(path(uuid, "name"), playerName);
         config.set(path(uuid, "level"), level);
         config.set(path(uuid, "activeSeconds"), activeSeconds);
+        config.set(path(uuid, "selfIncomeCents"), selfIncomeCents);
+    }
+
+    /** オフラインプレイヤーの収入イベントも永続データへ反映する。 */
+    public void addSelfIncomeCents(UUID uuid, String playerName, long amountCents) {
+        if (amountCents <= 0) {
+            return;
+        }
+        if (playerName != null) {
+            config.set(path(uuid, "name"), playerName);
+        }
+        config.set(path(uuid, "selfIncomeCents"), safeAdd(getSelfIncomeCents(uuid), amountCents));
     }
 
     /** config をファイルへ書き出す。 */
@@ -55,5 +73,9 @@ public final class LevelDataStore {
 
     private String path(UUID uuid, String key) {
         return "players." + uuid + "." + key;
+    }
+
+    private long safeAdd(long current, long amount) {
+        return Long.MAX_VALUE - current < amount ? Long.MAX_VALUE : current + amount;
     }
 }

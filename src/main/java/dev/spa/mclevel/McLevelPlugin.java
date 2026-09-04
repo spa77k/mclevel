@@ -19,6 +19,7 @@ public final class McLevelPlugin extends JavaPlugin {
         ActivityTracker tracker = new ActivityTracker(levelService);
 
         getServer().getPluginManager().registerEvents(new LevelListener(levelService, tracker, celebration), this);
+        JobsIncomeBridge.register(this, levelService);
 
         PluginCommand levelCommand = getCommand("level");
         if (levelCommand != null) {
