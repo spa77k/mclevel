@@ -35,8 +35,7 @@ public final class LevelCommand implements CommandExecutor, TabCompleter {
         long selfIncomeCents = levelService.getSelfIncomeCents(player);
 
         player.sendMessage(Component.text("=== レベル制度 ===", NamedTextColor.GOLD));
-        player.sendMessage(Component.text("現在レベル: Lv" + current.getValue(), NamedTextColor.AQUA)
-                .append(Component.text(" (" + current.getUnlockDescription() + ")", NamedTextColor.GRAY)));
+        player.sendMessage(Component.text("現在レベル: Lv" + current.getValue(), NamedTextColor.AQUA));
         player.sendMessage(Component.text("アクティブプレイ時間: " + formatHours(activeSeconds), NamedTextColor.WHITE));
         player.sendMessage(Component.text("実績達成数: " + achievements + " 個", NamedTextColor.WHITE));
         player.sendMessage(Component.text("累計自力収入: " + formatMoney(selfIncomeCents), NamedTextColor.WHITE));

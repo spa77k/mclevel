@@ -40,8 +40,6 @@ public final class LevelCelebration {
 
     public void celebrate(Player player, LevelTier tier) {
         player.sendMessage(Component.text("★ レベルが " + tier.getValue() + " になりました！", NamedTextColor.GOLD));
-        player.sendMessage(Component.text("解放: ", NamedTextColor.YELLOW)
-                .append(Component.text(tier.getUnlockDescription(), NamedTextColor.WHITE)));
 
         if (tier == LevelTier.LV3) {
             celebrateMaxLevel(player, tier);
@@ -51,7 +49,7 @@ public final class LevelCelebration {
         CelebrationParams params = paramsFor(tier);
         player.showTitle(Title.title(
                 Component.text("Lv" + tier.getValue() + " 達成！", params.titleColor()),
-                Component.text(tier.getUnlockDescription(), NamedTextColor.YELLOW)
+                Component.empty()
         ));
 
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, params.pitch());
@@ -74,12 +72,7 @@ public final class LevelCelebration {
     }
 
     private void celebrateMaxLevel(Player player, LevelTier tier) {
-        Component headline = Component.text(player.getName() + " が Lv3 に到達しました！", NamedTextColor.LIGHT_PURPLE);
-        Component subtitle = Component.text("解放: ", NamedTextColor.YELLOW)
-                .append(Component.text(tier.getUnlockDescription(), NamedTextColor.WHITE));
-
-        Bukkit.broadcast(headline);
-        Bukkit.broadcast(subtitle);
+        Bukkit.broadcast(Component.text(player.getName() + " が Lv3 に到達しました！", NamedTextColor.LIGHT_PURPLE));
         player.showTitle(Title.title(
                 Component.text("Lv3 達成！！", NamedTextColor.LIGHT_PURPLE),
                 Component.text("最高ランク到達", NamedTextColor.GOLD)
