@@ -5,24 +5,22 @@ package dev.spa.mclevel;
  * 各レベルは必要なアクティブプレイ時間・実績数・累計自力収入の条件を満たすと到達できる。
  */
 public enum LevelTier {
-    LV0(0, 0, 0, 0, "資源サーバーで開始、基本案内のみ"),
-    LV1(1, 1 * 3600, 5, 0, "建築サーバー入場、土地保護の利用開始"),
-    LV2(2, 25 * 3600, 25, 5_000L * 100L, "ショップ上限15個"),
-    LV3(3, 75 * 3600, 40, 5_000L * 100L, "記念称号");
+    LV0(0, 0, 0, 0),
+    LV1(1, 1 * 3600, 5, 0),
+    LV2(2, 25 * 3600, 25, 5_000L * 100L),
+    LV3(3, 75 * 3600, 40, 5_000L * 100L);
 
     private final int value;
     private final long requiredPlaySeconds;
     private final int requiredAchievements;
     private final long requiredSelfIncomeCents;
-    private final String unlockDescription;
 
     LevelTier(int value, long requiredPlaySeconds, int requiredAchievements,
-              long requiredSelfIncomeCents, String unlockDescription) {
+              long requiredSelfIncomeCents) {
         this.value = value;
         this.requiredPlaySeconds = requiredPlaySeconds;
         this.requiredAchievements = requiredAchievements;
         this.requiredSelfIncomeCents = requiredSelfIncomeCents;
-        this.unlockDescription = unlockDescription;
     }
 
     public int getValue() {
@@ -39,10 +37,6 @@ public enum LevelTier {
 
     public long getRequiredSelfIncomeCents() {
         return requiredSelfIncomeCents;
-    }
-
-    public String getUnlockDescription() {
-        return unlockDescription;
     }
 
     /** このレベルに到達するための条件を、指定のアクティブ秒数・実績数・累計自力収入が満たすか。 */
