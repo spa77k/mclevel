@@ -1,5 +1,6 @@
 package dev.spa.mclevel;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -9,6 +10,17 @@ public final class McLevelPlugin extends JavaPlugin {
     private static final long AUTOSAVE_TICKS = 20L * 300L; // 5 分
 
     private LevelService levelService;
+
+    /**
+     * 他プラグイン向けの累計アクティブ秒取得API。サーバーのメインスレッドから呼ぶ。
+     * 5秒ごとの積算済み値を返し、未保存のアクティブ時間も含む。バニラ統計は使わない。
+     */
+    public long getActiveSeconds(Player player) {
+        if (!isEnabled() || levelService == null || !Bukkit.isPrimaryThread()) {
+            throw new IllegalStateException("McLevel active time requires an enabled plugin and the main thread");
+        }
+        return levelService.getActiveSeconds(java.util.Objects.requireNonNull(player, "player"));
+    }
 
     @Override
     public void onEnable() {
