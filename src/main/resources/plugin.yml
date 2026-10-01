@@ -1,5 +1,5 @@
 name: McLevel
-version: 1.1.0
+version: 1.0.0
 main: dev.spa.mclevel.McLevelPlugin
 api-version: "1.20"
 author: spa

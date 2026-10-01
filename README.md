@@ -89,14 +89,14 @@ mvn package
 成功すると、次の JAR が作成されます。
 
 ```text
-target/mclevel-1.1.0.jar
+target/mclevel-1.0.0.jar
 ```
 
 ## 導入方法
 
 1. PaperMC 1.20.6 系とLuckPerms 5.5系のサーバーを用意する
 2. `mvn package` で JAR をビルドする
-3. `target/mclevel-1.1.0.jar` をサーバーの `plugins/` フォルダへ入れる
+3. `target/mclevel-1.0.0.jar` をサーバーの `plugins/` フォルダへ入れる
 4. Multiverse-Coreの`world.enforce-access`を`true`にする
 5. サーバーを起動または再起動する
 6. ゲーム内で `/level` を実行して動作確認する
