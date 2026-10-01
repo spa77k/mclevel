@@ -1,5 +1,5 @@
 name: McLevel
-version: 1.0.0
+version: 1.1.0
 main: dev.spa.mclevel.McLevelPlugin
 api-version: "1.20"
 author: spa
@@ -8,6 +8,8 @@ depend:
 softdepend:
   - Jobs
   - Skript
+  - Vault
+  - GriefPrevention
 commands:
   level:
     description: 現在のレベルと次レベルへの進捗を表示します

@@ -40,6 +40,7 @@ public final class LevelCelebration {
 
     public void celebrate(Player player, LevelTier tier) {
         player.sendMessage(Component.text("★ レベルが " + tier.getValue() + " になりました！", NamedTextColor.GOLD));
+        broadcastArrival(player, tier);
 
         if (tier == LevelTier.LV3) {
             celebrateMaxLevel(player, tier);
@@ -59,6 +60,20 @@ public final class LevelCelebration {
         }
     }
 
+    /** Lv1以上の到達を全体チャットへ流す。Lv0への設定は流さない。 */
+    private void broadcastArrival(Player player, LevelTier tier) {
+        NamedTextColor color = switch (tier) {
+            case LV1 -> NamedTextColor.YELLOW;
+            case LV2 -> NamedTextColor.GOLD;
+            case LV3 -> NamedTextColor.LIGHT_PURPLE;
+            default -> null;
+        };
+        if (color == null) {
+            return;
+        }
+        Bukkit.broadcast(Component.text("★ " + player.getName() + " が Lv" + tier.getValue() + " に到達しました！", color));
+    }
+
     /** LV3（celebrateMaxLevel で個別演出）を除く各レベルの演出パラメータ。 */
     private CelebrationParams paramsFor(LevelTier tier) {
         return switch (tier) {
@@ -72,7 +87,6 @@ public final class LevelCelebration {
     }
 
     private void celebrateMaxLevel(Player player, LevelTier tier) {
-        Bukkit.broadcast(Component.text(player.getName() + " が Lv3 に到達しました！", NamedTextColor.LIGHT_PURPLE));
         player.showTitle(Title.title(
                 Component.text("Lv3 達成！！", NamedTextColor.LIGHT_PURPLE),
                 Component.text("最高ランク到達", NamedTextColor.GOLD)
