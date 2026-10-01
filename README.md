@@ -23,6 +23,9 @@ PaperMC サーバー向けのシンプルなレベル制度プラグインです
 - プレイ時間と進捗数の両方を満たした場合にレベルアップ
 - `/level` コマンドで現在レベルと次レベルまでの進捗を表示
 - `/mclevel set` コマンドで管理者がレベルを強制設定（タイトル・花火・サウンドのお祝い演出付き）
+- Lv1・Lv2・Lv3への到達を全体チャットへ告知（管理者の設定でも流れる）
+- 自然昇格でLv1に初めて届いたとき、500SをVaultで1回だけ付与（累計自力収入には数えず、受け取り済みは`data.yml`の`lv1RewardClaimed`に記録。`/mclevel set`では付与しない）
+- 同時に本人だけへ次の目標を1行で案内（職業が未選択なら`/jobs browse`、選択済みで土地が無ければ`/claimshovel`、両方済みなら出さない。クリックで実行。Jobs・GriefPreventionはリフレクションで参照し、判定できない場合は案内を出さない）
 - 起動時にLuckPermsの`mclevel_lv1`〜`mclevel_lv3`グループを作成・補正し、プレイヤーのレベルと同期
 - `data.yml` へプレイヤーデータを保存
 - 5分ごとのオートセーブ
@@ -86,14 +89,14 @@ mvn package
 成功すると、次の JAR が作成されます。
 
 ```text
-target/mclevel-1.0.0.jar
+target/mclevel-1.1.0.jar
 ```
 
 ## 導入方法
 
 1. PaperMC 1.20.6 系とLuckPerms 5.5系のサーバーを用意する
 2. `mvn package` で JAR をビルドする
-3. `target/mclevel-1.0.0.jar` をサーバーの `plugins/` フォルダへ入れる
+3. `target/mclevel-1.1.0.jar` をサーバーの `plugins/` フォルダへ入れる
 4. Multiverse-Coreの`world.enforce-access`を`true`にする
 5. サーバーを起動または再起動する
 6. ゲーム内で `/level` を実行して動作確認する

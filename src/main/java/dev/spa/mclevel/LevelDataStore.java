@@ -43,6 +43,16 @@ public final class LevelDataStore {
         return Math.max(0L, selfIncomeCents);
     }
 
+    public boolean isLv1RewardClaimed(UUID uuid) {
+        return config.getBoolean(path(uuid, "lv1RewardClaimed"), false);
+    }
+
+    /** Lv1到達報酬の受け取り済みを記録する（ファイル保存は呼び出し側）。 */
+    public void setLv1RewardClaimed(UUID uuid, String playerName) {
+        config.set(path(uuid, "name"), playerName);
+        config.set(path(uuid, "lv1RewardClaimed"), true);
+    }
+
     /** メモリ上の値を config に反映する（ファイル保存は行わない）。 */
     public void put(UUID uuid, String playerName, int level, long activeSeconds, long selfIncomeCents) {
         config.set(path(uuid, "name"), playerName);

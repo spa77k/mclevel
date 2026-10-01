@@ -27,7 +27,7 @@ public final class McLevelPlugin extends JavaPlugin {
         LevelDataStore dataStore = new LevelDataStore(this);
         LevelCelebration celebration = new LevelCelebration(this);
         LuckPermsGroupManager groupManager = new LuckPermsGroupManager(this);
-        levelService = new LevelService(dataStore, celebration, groupManager);
+        levelService = new LevelService(dataStore, celebration, groupManager, new Lv1Welcome(this));
         ActivityTracker tracker = new ActivityTracker(levelService);
 
         getServer().getPluginManager().registerEvents(new LevelListener(levelService, tracker, celebration), this);

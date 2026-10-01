@@ -20,9 +20,12 @@ public final class LevelService {
     private final LevelDataStore dataStore;
     private final LevelCelebration celebration;
     private final LuckPermsGroupManager groupManager;
+    private final Lv1Welcome lv1Welcome;
     private final Map<UUID, PlayerState> states = new ConcurrentHashMap<>();
 
-    public LevelService(LevelDataStore dataStore, LevelCelebration celebration, LuckPermsGroupManager groupManager) {
+    public LevelService(LevelDataStore dataStore, LevelCelebration celebration, LuckPermsGroupManager groupManager,
+                        Lv1Welcome lv1Welcome) {
+        this.lv1Welcome = lv1Welcome;
         this.dataStore = dataStore;
         this.celebration = celebration;
         this.groupManager = groupManager;
@@ -136,11 +139,25 @@ public final class LevelService {
                 state.selfIncomeCents
         );
         if (qualified.getValue() > state.level) {
+            int previousLevel = state.level;
             state.level = qualified.getValue();
             save(player);
             groupManager.syncPlayer(player, state.level);
             celebration.celebrate(player, qualified);
+            if (previousLevel < 1) {
+                welcomeLv1(player);
+            }
         }
+    }
+
+    /** 自然昇格でLv1に届いた1回だけ、報酬と次の目標を渡す。管理者の設定では呼ばない。 */
+    private void welcomeLv1(Player player) {
+        if (!dataStore.isLv1RewardClaimed(player.getUniqueId()) && lv1Welcome.giveReward(player)) {
+            dataStore.setLv1RewardClaimed(player.getUniqueId(), player.getName());
+            dataStore.save();
+            lv1Welcome.sendRewardMessage(player);
+        }
+        lv1Welcome.sendNextGoal(player);
     }
 
     /** 管理者がレベルを強制設定し、即座に保存する。お祝い演出も発火する。 */
