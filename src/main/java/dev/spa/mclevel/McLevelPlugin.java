@@ -10,6 +10,7 @@ public final class McLevelPlugin extends JavaPlugin {
     private static final long AUTOSAVE_TICKS = 20L * 300L; // 5 分
 
     private LevelService levelService;
+    private LastActiveMetadata lastActive;
 
     /**
      * 他プラグイン向けの累計アクティブ秒取得API。サーバーのメインスレッドから呼ぶ。
@@ -29,8 +30,10 @@ public final class McLevelPlugin extends JavaPlugin {
         LuckPermsGroupManager groupManager = new LuckPermsGroupManager(this);
         levelService = new LevelService(dataStore, celebration, groupManager, new Lv1Welcome(this));
         ActivityTracker tracker = new ActivityTracker(levelService);
+        lastActive = new LastActiveMetadata(this);
 
-        getServer().getPluginManager().registerEvents(new LevelListener(levelService, tracker, celebration), this);
+        getServer().getPluginManager().registerEvents(
+                new LevelListener(levelService, tracker, celebration, lastActive), this);
         JobsIncomeBridge.register(this, levelService);
 
         PluginCommand levelCommand = getCommand("level");
@@ -55,6 +58,7 @@ public final class McLevelPlugin extends JavaPlugin {
         for (Player player : getServer().getOnlinePlayers()) {
             levelService.load(player);
             tracker.start(player);
+            lastActive.mark(player);
             levelService.syncPermissions(player);
         }
 
@@ -67,6 +71,11 @@ public final class McLevelPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         getServer().getScheduler().cancelTasks(this);
+        if (lastActive != null) {
+            for (Player player : getServer().getOnlinePlayers()) {
+                lastActive.clear(player);
+            }
+        }
         if (levelService != null) {
             levelService.saveAll();
         }
