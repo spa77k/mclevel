@@ -172,3 +172,15 @@ APIが利用できない場合、EcoLifeAssistは登録と支払いを保留し�
 
 連携の回帰テストは `../mc-ecolife/scripts/test-invite-paper.py` にあります。
 実McLevel・LuckPerms・Paperを起動し、テスト用Playerで未保存値・2時間境界・再起動後の保存値・無効化と復旧を確認します。
+
+## 最後に操作した時刻（放置判定用）
+
+オンラインのプレイヤーには、最後に操作した時刻がメタデータ `mclevel.lastActive`（UNIXミリ秒のlong）として付きます。
+アクティブ時間の判定と同じ操作に加えて、視点の移動、別のブロックへの歩行（乗り物に乗っているときと水中は除く）、チャット、コマンドで更新します。更新は1秒に1回までです。
+参加時に参加時刻が入り、退出時とMcLevelの無効化時に消えます。この値はアクティブ時間の加算には使いません。
+
+Skriptからは次のように読めます。
+
+```
+set {_last} to metadata value "mclevel.lastActive" of player
+```
