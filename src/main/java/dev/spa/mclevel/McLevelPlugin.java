@@ -11,6 +11,7 @@ public final class McLevelPlugin extends JavaPlugin {
 
     private LevelService levelService;
     private LastActiveMetadata lastActive;
+    private ProgressMetadata progress;
 
     /**
      * 他プラグイン向けの累計アクティブ秒取得API。サーバーのメインスレッドから呼ぶ。
@@ -31,9 +32,10 @@ public final class McLevelPlugin extends JavaPlugin {
         levelService = new LevelService(dataStore, celebration, groupManager, new Lv1Welcome(this));
         ActivityTracker tracker = new ActivityTracker(levelService);
         lastActive = new LastActiveMetadata(this);
+        progress = new ProgressMetadata(this, levelService);
 
         getServer().getPluginManager().registerEvents(
-                new LevelListener(levelService, tracker, celebration, lastActive), this);
+                new LevelListener(levelService, tracker, celebration, lastActive, progress), this);
         JobsIncomeBridge.register(this, levelService);
 
         PluginCommand levelCommand = getCommand("level");
@@ -59,11 +61,15 @@ public final class McLevelPlugin extends JavaPlugin {
             levelService.load(player);
             tracker.start(player);
             lastActive.mark(player);
+            progress.update(player);
             levelService.syncPermissions(player);
         }
 
-        // 5 秒ごとのアクティブ時間積算・昇格判定。
-        getServer().getScheduler().runTaskTimer(this, tracker::tick, ACTIVITY_TICKS, ACTIVITY_TICKS);
+        // 5 秒ごとのアクティブ時間積算・昇格判定。積算した値をメタデータにも出す。
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            tracker.tick();
+            progress.updateAll();
+        }, ACTIVITY_TICKS, ACTIVITY_TICKS);
         // 定期オートセーブ。
         getServer().getScheduler().runTaskTimer(this, levelService::saveAll, AUTOSAVE_TICKS, AUTOSAVE_TICKS);
     }
@@ -74,6 +80,11 @@ public final class McLevelPlugin extends JavaPlugin {
         if (lastActive != null) {
             for (Player player : getServer().getOnlinePlayers()) {
                 lastActive.clear(player);
+            }
+        }
+        if (progress != null) {
+            for (Player player : getServer().getOnlinePlayers()) {
+                progress.clear(player);
             }
         }
         if (levelService != null) {

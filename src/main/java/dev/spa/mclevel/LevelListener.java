@@ -29,13 +29,15 @@ public final class LevelListener implements Listener {
     private final ActivityTracker tracker;
     private final LevelCelebration celebration;
     private final LastActiveMetadata lastActive;
+    private final ProgressMetadata progress;
 
     public LevelListener(LevelService levelService, ActivityTracker tracker, LevelCelebration celebration,
-                         LastActiveMetadata lastActive) {
+                         LastActiveMetadata lastActive, ProgressMetadata progress) {
         this.levelService = levelService;
         this.tracker = tracker;
         this.celebration = celebration;
         this.lastActive = lastActive;
+        this.progress = progress;
     }
 
     /** プレイ時間の加算と、最後に操作した時刻の両方へ記録する。 */
@@ -54,6 +56,7 @@ public final class LevelListener implements Listener {
         lastActive.mark(player);
         levelService.evaluate(player);
         levelService.syncPermissions(player);
+        progress.update(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -63,12 +66,14 @@ public final class LevelListener implements Listener {
         levelService.unload(player);
         tracker.stop(player);
         lastActive.clear(player);
+        progress.clear(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onAdvancement(PlayerAdvancementDoneEvent event) {
         levelService.refreshAchievements(event.getPlayer());
         levelService.evaluate(event.getPlayer());
+        progress.update(event.getPlayer());
     }
 
     // --- 自発的操作（アクティブ判定） ---

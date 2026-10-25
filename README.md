@@ -184,3 +184,13 @@ Skriptからは次のように読めます。
 ```
 set {_last} to metadata value "mclevel.lastActive" of player
 ```
+
+## 次のレベルまでの進み具合（表示用）
+
+オンラインのプレイヤーには、累計アクティブ秒がメタデータ `mclevel.activeSeconds`（long）、レシピ解禁を除く進捗の達成数が `mclevel.achievements`（int）として付きます。
+参加時と進捗の達成時、5秒ごとのアクティブ時間の積算のあとに更新し、退出時とMcLevelの無効化時に消えます。
+
+```
+set {_seconds} to metadata value "mclevel.activeSeconds" of player
+set {_achievements} to metadata value "mclevel.achievements" of player
+```
