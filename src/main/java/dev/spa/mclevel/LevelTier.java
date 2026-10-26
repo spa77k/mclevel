@@ -8,7 +8,7 @@ public enum LevelTier {
     LV0(0, 0, 0, 0),
     LV1(1, 30 * 60, 5, 0),
     LV2(2, 25 * 3600, 25, 5_000L * 100L),
-    LV3(3, 75 * 3600, 40, 5_000L * 100L);
+    LV3(3, 75 * 3600, 40, 25_000L * 100L);
 
     private final int value;
     private final long requiredPlaySeconds;
